@@ -1,0 +1,174 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  HEAD_REFEREE
+  ALLIANCE_REFEREE
+  COMMON
+}
+
+enum StageType {
+  SWISS
+  PLAYOFF
+  FINAL
+}
+
+enum CardType {
+  NONE
+  YELLOW
+  RED
+}
+
+enum RefereeRole {
+  HEAD_REFEREE
+  ALLIANCE_REFEREE
+}
+
+model User {
+  id             String            @id @default(uuid())
+  username       String            @unique
+  password       String
+  role           UserRole
+  email          String?           @unique
+  gender         Boolean?
+  DateOfBirth    DateTime?
+  phoneNumber    String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  createdBy      User?             @relation("CreatedUsers", fields: [createdById], references: [id])
+  createdById    String?
+  createdUsers   User[]            @relation("CreatedUsers")
+  tournaments    Tournament[]
+  scoredMatches  Match[]           @relation("ScoredBy")
+  allianceRefFor AllianceScoring[] @relation("AllianceReferee")
+  matchReferees  MatchReferee[] // New relation for match referees
+}
+
+model Tournament {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  adminId     String
+  admin       User     @relation(fields: [adminId], references: [id])
+  stages      Stage[]
+  teams       Team[] // Added teams relationship
+}
+
+model Stage {
+  id           String     @id @default(uuid())
+  name         String
+  type         StageType
+  startDate    DateTime
+  endDate      DateTime
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  matches      Match[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model Match {
+  id            String         @id @default(uuid())
+  matchNumber   Int
+  status        String         @default("PENDING") // PENDING, IN_PROGRESS, COMPLETED
+  startTime     DateTime? // Full timestamp with hour-minute precision
+  scheduledTime DateTime? // New field for the scheduled time with hour-minute precision
+  endTime       DateTime? // Full timestamp with hour-minute precision
+  duration      Int? // Duration in minutes
+  stageId       String
+  stage         Stage          @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  alliances     Alliance[]
+  scoredById    String?
+  scoredBy      User?          @relation("ScoredBy", fields: [scoredById], references: [id])
+  referees      MatchReferee[] // New relation for match referees
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model MatchReferee {
+  id        String      @id @default(uuid())
+  matchId   String
+  match     Match       @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User        @relation(fields: [userId], references: [id])
+  role      RefereeRole // HEAD_REFEREE or ALLIANCE_REFEREE
+  position  String? // Optional position identifier (e.g. "RED1", "BLUE2")
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([matchId, userId])
+  @@index([matchId])
+  @@index([userId])
+}
+
+model Alliance {
+  id              String           @id @default(uuid())
+  color           String // e.g., "RED", "BLUE"
+  score           Int              @default(0)
+  matchId         String
+  match           Match            @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  teamAlliances   TeamAlliance[]
+  allianceScoring AllianceScoring?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+}
+
+model AllianceScoring {
+  id           String   @id @default(uuid())
+  allianceId   String   @unique
+  alliance     Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+  refereeId    String?
+  referee      User?    @relation("AllianceReferee", fields: [refereeId], references: [id])
+  scoreDetails Json? // Store detailed scoring information as JSON
+  card         CardType @default(NONE)
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Team {
+  id            String         @id @default(uuid())
+  teamNumber    String         @unique
+  name          String
+  organization  String?
+  avatar        String? // URL to team avatar image
+  description   String? // Team description
+  teamMembers   Json? // Store team members as a JSON array
+  tournamentId  String? // Optional link to tournament
+  tournament    Tournament?    @relation(fields: [tournamentId], references: [id])
+  teamAlliances TeamAlliance[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([tournamentId])
+}
+
+model TeamAlliance {
+  id         String   @id @default(uuid())
+  teamId     String
+  team       Team     @relation(fields: [teamId], references: [id])
+  allianceId String
+  alliance   Alliance @relation(fields: [allianceId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([teamId, allianceId])
+}
