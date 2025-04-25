@@ -446,117 +446,109 @@ Base path: `/api/stages`
 - **Parameters**: `id` - Stage ID
 - **Response**: Deleted stage object
 
-### Matches
+### MatchScores
 
-Base path: `/api/matches`
+Base path: `/api/match-scores`
 
 | Method | Endpoint | Description | Required Role |
 |--------|----------|-------------|--------------|
-| GET | `/matches` | List all matches | Any role |
-| GET | `/matches/:id` | Get a specific match by ID | Any role |
-| POST | `/matches` | Create a new match | ADMIN |
-| PATCH | `/matches/:id` | Update a match | ADMIN |
-| PATCH | `/matches/alliance/:id` | Update an alliance in a match | ADMIN |
-| PATCH | `/matches/scoring/:id` | Update alliance scoring in a match | ADMIN |
-| POST | `/matches/:id/referees` | Assign referees to a match | ADMIN |
-| DELETE | `/matches/:id` | Delete a match | ADMIN |
+| GET | `/match-scores` | List all match scores | Any role |
+| GET | `/match-scores/:id` | Get a specific match score by ID | Any role |
+| GET | `/match-scores/match/:matchId` | Get match scores by match ID | Any role |
+| POST | `/match-scores` | Create match scores for a match | ADMIN, HEAD_REFEREE, ALLIANCE_REFEREE |
+| PATCH | `/match-scores/:id` | Update match scores | ADMIN, HEAD_REFEREE, ALLIANCE_REFEREE |
+| DELETE | `/match-scores/:id` | Delete match scores | ADMIN, HEAD_REFEREE |
 
-#### Create Match
-- **Endpoint**: `POST /api/matches`
+#### Create Match Scores
+- **Endpoint**: `POST /api/match-scores`
 - **Body**: 
   ```json
   {
-    "matchNumber": 1,
-    "stageId": "string (UUID)",
-    "status": "PENDING | IN_PROGRESS | COMPLETED",  // optional, default: "PENDING"
-    "startTime": "string (ISO date with time)",  // optional, includes hour-minute precision
-    "scheduledTime": "string (ISO date with time)",  // optional, planned start time with hour-minute precision
-    "endTime": "string (ISO date with time)",    // optional, includes hour-minute precision
-    "duration": 10,  // optional, duration in minutes
-    "alliances": [   // optional
+    "matchId": "string (UUID)",
+    "redAutoScore": 0,             // optional, default: 0
+    "redDriveScore": 0,            // optional, default: 0
+    "redTotalScore": 0,            // optional, default: 0
+    "blueAutoScore": 0,            // optional, default: 0
+    "blueDriveScore": 0,           // optional, default: 0
+    "blueTotalScore": 0,           // optional, default: 0
+    "redGameElements": [           // optional
       {
-        "color": "string",
-        "teamIds": ["string (UUID)", "string (UUID)"]
+        "element": "ball",
+        "count": 3,
+        "pointsEach": 20,
+        "totalPoints": 60,
+        "operation": "multiply"
       }
-    ]
-  }
-  ```
-- **Response**: Created match object
-
-#### Get All Matches
-- **Endpoint**: `GET /api/matches`
-- **Response**: Array of match objects
-
-#### Get Match by ID
-- **Endpoint**: `GET /api/matches/:id`
-- **Parameters**: `id` - Match ID
-- **Response**: Match object with alliances, teams, and scoring data
-
-#### Update Match
-- **Endpoint**: `PATCH /api/matches/:id`
-- **Parameters**: `id` - Match ID
-- **Body**: 
-  ```json
-  {
-    "matchNumber": 1,               // optional
-    "status": "PENDING | IN_PROGRESS | COMPLETED", // optional
-    "startTime": "string (ISO date with time)",  // optional
-    "scheduledTime": "string (ISO date with time)",  // optional
-    "endTime": "string (ISO date with time)",    // optional
-    "duration": 10  // optional, duration in minutes
-  }
-  ```
-- **Response**: Updated match object
-
-#### Update Alliance
-- **Endpoint**: `PATCH /api/matches/alliance/:id`
-- **Parameters**: `id` - Alliance ID
-- **Body**: 
-  ```json
-  {
-    "teamIds": ["string (UUID)", "string (UUID)"]
-  }
-  ```
-- **Response**: Updated alliance object
-
-#### Update Alliance Scoring
-- **Endpoint**: `PATCH /api/matches/scoring/:id`
-- **Parameters**: `id` - Alliance ID
-- **Body**: 
-  ```json
-  {
-    "refereeId": "string (UUID)",
-    "score": 100,
-    "scoreDetails": {}, // optional JSON object with detailed scoring
-    "card": "NONE | YELLOW | RED" // optional
-  }
-  ```
-- **Response**: Updated alliance scoring object
-
-#### Assign Referees to Match
-- **Endpoint**: `POST /api/matches/:id/referees`
-- **Parameters**: `id` - Match ID
-- **Body**:
-  ```json
-  {
-    "referees": [
+    ],
+    "blueGameElements": [          // optional
       {
-        "userId": "string (UUID)",
-        "role": "HEAD_REFEREE | ALLIANCE_REFEREE",
-        "position": "RED1" // optional, e.g., "RED1", "BLUE2"
+        "element": "ball",
+        "count": 2,
+        "pointsEach": 20,
+        "totalPoints": 40,
+        "operation": "multiply"
       }
-    ]
+    ],
+    "redTeamCount": 2,             // optional, default: 0
+    "redMultiplier": 1.5,          // optional, default: 1.0
+    "blueTeamCount": 3,            // optional, default: 0
+    "blueMultiplier": 1.75,        // optional, default: 1.0
+    "scoreDetails": {}             // optional, additional score details as JSON
   }
   ```
 - **Notes**:
-  - Each match should have 1 HEAD_REFEREE and 3-4 ALLIANCE_REFEREE
-  - Position field helps identify the alliance assignment for alliance referees
-- **Response**: Updated match object with referees
+  - Team count multipliers are automatically calculated if not provided:
+    - 1 team: x1.25
+    - 2 teams: x1.5
+    - 3 teams: x1.75
+    - 4 teams: x2.0
+  - Game elements allow tracking individual scoring items with operations (add, subtract, multiply)
+- **Response**: Created match scores object
 
-#### Delete Match
-- **Endpoint**: `DELETE /api/matches/:id`
-- **Parameters**: `id` - Match ID
-- **Response**: Deleted match object
+#### Get All Match Scores
+- **Endpoint**: `GET /api/match-scores`
+- **Response**: Array of match scores objects with related match information
+
+#### Get Match Scores by ID
+- **Endpoint**: `GET /api/match-scores/:id`
+- **Parameters**: `id` - Match scores ID
+- **Response**: Match scores object with related match and alliance information
+
+#### Get Match Scores by Match ID
+- **Endpoint**: `GET /api/match-scores/match/:matchId`
+- **Parameters**: `matchId` - Match ID
+- **Response**: Match scores object with related match and alliance information
+
+#### Update Match Scores
+- **Endpoint**: `PATCH /api/match-scores/:id`
+- **Parameters**: `id` - Match scores ID
+- **Body**: 
+  ```json
+  {
+    "redAutoScore": 10,            // optional
+    "redDriveScore": 30,           // optional
+    "redTotalScore": 40,           // optional
+    "blueAutoScore": 15,           // optional
+    "blueDriveScore": 25,          // optional
+    "blueTotalScore": 40,          // optional
+    "redGameElements": [...],      // optional
+    "blueGameElements": [...],     // optional
+    "redTeamCount": 2,             // optional
+    "redMultiplier": 1.5,          // optional
+    "blueTeamCount": 3,            // optional
+    "blueMultiplier": 1.75,        // optional
+    "scoreDetails": {}             // optional
+  }
+  ```
+- **Notes**:
+  - If you update `redTeamCount` without providing `redMultiplier`, the multiplier will be automatically calculated
+  - Same for `blueTeamCount` and `blueMultiplier`
+- **Response**: Updated match scores object
+
+#### Delete Match Scores
+- **Endpoint**: `DELETE /api/match-scores/:id`
+- **Parameters**: `id` - Match scores ID
+- **Response**: Success message or deleted match scores object
 
 ## Models
 
@@ -672,6 +664,56 @@ Base path: `/api/matches`
   user: User
   role: "HEAD_REFEREE" | "ALLIANCE_REFEREE"
   position: string       // Optional position identifier (e.g. "RED1", "BLUE2")
+  createdAt: Date
+  updatedAt: Date
+}
+```
+
+### MatchScores
+```
+{
+  id: string
+  matchId: string
+  match: Match
+  
+  // Red Alliance Scores
+  redAutoScore: number
+  redDriveScore: number
+  redTotalScore: number
+  
+  // Blue Alliance Scores
+  blueAutoScore: number
+  blueDriveScore: number
+  blueTotalScore: number
+  
+  // Game Elements Scoring
+  redGameElements: [     // JSON array of game elements for red alliance
+    {
+      element: string    // Element name, e.g. "ball"
+      count: number      // Number of elements collected
+      pointsEach: number // Points per element
+      totalPoints: number // Total points (count * pointsEach)
+      operation: string  // Scoring operation ("add", "subtract", "multiply")
+    }
+  ]
+  
+  blueGameElements: [    // JSON array of game elements for blue alliance
+    {
+      element: string
+      count: number
+      pointsEach: number
+      totalPoints: number
+      operation: string
+    }
+  ]
+  
+  // Team counts and score multipliers
+  redTeamCount: number   // Number of teams in red alliance (1-4)
+  redMultiplier: number  // Score multiplier based on team count
+  blueTeamCount: number  // Number of teams in blue alliance (1-4)
+  blueMultiplier: number // Score multiplier based on team count
+  
+  scoreDetails: object   // Additional scoring details as JSON
   createdAt: Date
   updatedAt: Date
 }

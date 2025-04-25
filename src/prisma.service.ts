@@ -34,6 +34,7 @@ export class PrismaService implements OnModuleInit, OnModuleDestroy {
   get teamAlliance() { return this.prisma.teamAlliance; }
   get allianceScoring() { return this.prisma.allianceScoring; }
   get matchReferee() { return this.prisma.matchReferee; }
+  get matchScores() { return this.prisma.matchScores; }
 
   // Forward transaction method
   get $transaction() {

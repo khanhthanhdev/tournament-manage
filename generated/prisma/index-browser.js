@@ -218,6 +218,26 @@ exports.Prisma.TeamAllianceScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.MatchScoresScalarFieldEnum = {
+  id: 'id',
+  matchId: 'matchId',
+  redAutoScore: 'redAutoScore',
+  redDriveScore: 'redDriveScore',
+  redTotalScore: 'redTotalScore',
+  blueAutoScore: 'blueAutoScore',
+  blueDriveScore: 'blueDriveScore',
+  blueTotalScore: 'blueTotalScore',
+  redGameElements: 'redGameElements',
+  blueGameElements: 'blueGameElements',
+  redTeamCount: 'redTeamCount',
+  redMultiplier: 'redMultiplier',
+  blueTeamCount: 'blueTeamCount',
+  blueMultiplier: 'blueMultiplier',
+  scoreDetails: 'scoreDetails',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -276,7 +296,8 @@ exports.Prisma.ModelName = {
   Alliance: 'Alliance',
   AllianceScoring: 'AllianceScoring',
   Team: 'Team',
-  TeamAlliance: 'TeamAlliance'
+  TeamAlliance: 'TeamAlliance',
+  MatchScores: 'MatchScores'
 };
 
 /**

@@ -6,6 +6,7 @@ import { TournamentsModule } from './tournaments/tournaments.module';
 import { TeamsModule } from './teams/teams.module';
 import { StagesModule } from './stages/stages.module';
 import { MatchesModule } from './matches/matches.module';
+import { MatchScoresModule } from './match-scores/match-scores.module';
 import { AuthModule } from './auth/auth.module';
 import { AuthService } from './auth/auth.service';
 
@@ -17,6 +18,7 @@ import { AuthService } from './auth/auth.service';
     TeamsModule,
     StagesModule,
     MatchesModule,
+    MatchScoresModule,
   ],
   controllers: [AppController],
   providers: [AppService],
